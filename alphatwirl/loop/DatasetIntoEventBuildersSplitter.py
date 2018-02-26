@@ -1,4 +1,5 @@
 # Tai Sakuma <tai.sakuma@gmail.com>
+import logging
 
 from .splitfuncs import create_file_start_length_list
 
@@ -81,7 +82,6 @@ class DatasetIntoEventBuildersSplitter(object):
             try:
                 n = self.eventBuilderConfigMaker.nevents_in_file(f)
             except AttributeError:
-                import logging
                 logger = logging.getLogger(__name__)
                 logger.error("Problem with file: " + str(f))
                 continue
