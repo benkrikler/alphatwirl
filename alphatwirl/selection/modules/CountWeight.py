@@ -31,8 +31,8 @@ class Count(object):
 
     def count(self, pass_, event):
         for r, p in zip(self._results, pass_):
-            r[IDX_TOTAL] += event.w[0] # total
-            if p: r[IDX_PASS] += event.w[0] # pass
+            r[IDX_TOTAL] += event.weight[0] # total
+            if p: r[IDX_PASS] += event.weight[0] # pass
 
     def increment_depth(self, by = 1):
         for r in self._results:
