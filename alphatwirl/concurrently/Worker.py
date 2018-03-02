@@ -7,7 +7,6 @@ try:
     from logging.handlers import QueueHandler
 except ImportError:
     from .queuehandler import QueueHandler
-    pass
 
 from alphatwirl import progressbar
 
@@ -24,7 +23,22 @@ class Worker(multiprocessing.Process):
 
     def run(self):
         self._configure_logger()
+        self._configure_progressbar()
+        try:
+            self._run_tasks()
+        except KeyboardInterrupt:
+            pass
+
+    def _configure_logger(self):
+        handler = QueueHandler(self.logging_queue)
+        logger = logging.getLogger()
+        logger.setLevel(logging.DEBUG)
+        logger.addHandler(handler)
+
+    def _configure_progressbar(self):
         progressbar._progress_reporter = self.progressReporter
+
+    def _run_tasks(self):
         while True:
             message = self.task_queue.get()
             if message is None:
@@ -35,10 +49,5 @@ class Worker(multiprocessing.Process):
             self.task_queue.task_done()
             self.result_queue.put((task_idx, result))
 
-    def _configure_logger(self):
-        handler = QueueHandler(self.logging_queue)
-        logger = logging.getLogger()
-        logger.setLevel(logging.DEBUG)
-        logger.addHandler(handler)
 
 ##__________________________________________________________________||

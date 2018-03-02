@@ -8,24 +8,30 @@ import logging
 import tarfile
 import gzip
 from fnmatch import fnmatch
+import json
+import re
 
 try:
-   import cPickle as pickle
+    import cPickle as pickle
 except:
-   import pickle
+    import pickle
 
 import alphatwirl
+
+from alphatwirl.misc.deprecation import atrenamed_class_method_option
 
 ##__________________________________________________________________||
 class WorkingArea(object):
     """
         Args:
-        dir (str): a path to a directory in which a new directory will be created
+        topdir (str): a path to a directory in which a new directory will be created
+        python_modules (list): names of python modules to be shipped to worker nodes
 
     """
 
-    def __init__(self, dir, python_modules, exclusions=None):
-        self.topdir = dir
+    @atrenamed_class_method_option(old='dir', new='topdir')
+    def __init__(self, topdir, python_modules, exclusions=None):
+        self.topdir = topdir
         self.python_modules = python_modules
         self.path = None
         self.last_package_index = None
@@ -41,7 +47,9 @@ class WorkingArea(object):
 
     def open(self):
         self.path = self._prepare_dir(self.topdir)
-        self._put_python_modules(self.python_modules)
+        self._copy_run_py(area_path=self.path)
+        self._save_logging_levels(area_path=self.path)
+        self._put_python_modules(modules=self.python_modules, area_path=self.path)
         self.last_package_index = -1 # so it starts from 0
 
     def put_package(self, package):
@@ -96,18 +104,30 @@ class WorkingArea(object):
         path = tempfile.mkdtemp(prefix=prefix, dir=dir)
         # e.g., '{path}/tpd_20161129_122841_HnpcmF'
 
-        # copy run.py to the task dir
-        thisdir = os.path.dirname(__file__)
-        src = os.path.join(thisdir, 'run.py')
-        shutil.copy(src, path)
-
         return path
 
-    def _put_python_modules(self, modules):
+    def _copy_run_py(self, area_path):
+        thisdir = os.path.dirname(__file__)
+        src = os.path.join(thisdir, 'run.py')
+        shutil.copy(src, area_path)
+
+    def _save_logging_levels(self, area_path):
+        logger_names = logging.Logger.manager.loggerDict.keys()
+        loglevel_dict = {l: logging.getLogger(l).getEffectiveLevel() for l in logger_names}
+
+        json_str = json.dumps(loglevel_dict, indent=4, sort_keys=True)
+        json_str = re.sub(r' *\n', '\n', json_str, flags=re.MULTILINE)
+        json_str += "\n"
+        json_bytes = json_str.encode('utf-8')
+        path = os.path.join(area_path, 'logging_levels.json.gz')
+        with gzip.open(path, "w") as f:
+            f.write(json_bytes)
+
+    def _put_python_modules(self, modules, area_path):
 
         if not modules: return
 
-        tar = tarfile.open(os.path.join(self.path, 'python_modules.tar.gz'), 'w:gz')
+        tar = tarfile.open(os.path.join(area_path, 'python_modules.tar.gz'), 'w:gz')
 
         def tar_filter(tarinfo):
             if any(fnmatch(tarinfo.name, excl) for excl in self.exclusions):
