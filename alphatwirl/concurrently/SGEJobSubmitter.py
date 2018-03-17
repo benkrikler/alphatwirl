@@ -112,9 +112,8 @@ class SGEJobSubmitter(object):
         stdout, stderr = proc.communicate()
 
         search_str = r'Your job-array (\d+).1-(\d+):1 \("job_script.sh"\) has been submitted'
-        if sys.version_info[0] > 2:
-            search_str = bytes(search_str)
-        regex = re.compile(search_str)
+        # I think encode() fixes things for python 2/3
+        regex = re.compile(search_str.encode())
         njobs = int(regex.search(stdout).groups()[1])
         clusterid = regex.search(stdout).groups()[0]
         # e.g., '2448770'
