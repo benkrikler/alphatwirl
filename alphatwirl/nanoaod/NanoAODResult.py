@@ -3,7 +3,7 @@ import os
 import re
 import numpy as np
 
-from Component import Component
+from .Component import Component
 
 ##__________________________________________________________________||
 class NanoAODResult(object):
