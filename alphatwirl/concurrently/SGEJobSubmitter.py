@@ -110,10 +110,11 @@ class SGEJobSubmitter(object):
             stderr = subprocess.PIPE,
         )
         stdout, stderr = proc.communicate()
+        stdout = stdout.decode()
+        stderr = stderr.decode()
 
         search_str = r'Your job-array (\d+).1-(\d+):1 \("job_script.sh"\) has been submitted'
-        # I think encode() fixes things for python 2/3
-        regex = re.compile(search_str.encode())
+        regex = re.compile(search_str)
         njobs = int(regex.search(stdout).groups()[1])
         clusterid = regex.search(stdout).groups()[0]
         # e.g., '2448770'
