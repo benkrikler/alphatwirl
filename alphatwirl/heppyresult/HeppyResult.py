@@ -73,7 +73,7 @@ class IsComponent(object):
 
     def __call__(self, path):
         if not os.path.isdir(path): return False
-        if filter(lambda excl: fnmatch.fnmatch(os.path.basename(path), excl), self.excludeList): return False
+        if [excl for excl in self.excludeList if fnmatch.fnmatch(os.path.basename(path), excl)]: return False
         if not set(self.componentHasTheseFiles).issubset(set(os.listdir(path))): return False
         return True
 
