@@ -12,8 +12,16 @@ class Count(object):
     instead of 1.
     """
 
-    def __init__(self):
+    def __init__(self, weight_attr="weight"):
         self._results = [ ]
+        self._weight = weight_attr
+        self._count_const = isinstance(self._weight, (int, float))
+
+    def count(self, pass_, event):
+        if self._count_const:
+            return self._count_const(pass_, event)
+
+        return self._count_attr(pass_, event)
 
     def __repr__(self):
         return '{}({!r})'.format(self.__class__.__name__, self._results)
@@ -29,10 +37,15 @@ class Count(object):
         total = 0
         self._results.append([depth, class_name, selection_name, pass_, total])
 
-    def count(self, pass_, event):
+    def _count_attr(self, pass_, event):
         for r, p in zip(self._results, pass_):
-            r[IDX_TOTAL] += event.weight[0] # total
-            if p: r[IDX_PASS] += event.weight[0] # pass
+            r[IDX_TOTAL] += getattr(event, self._weight)[0] # total
+            if p: r[IDX_PASS] += getattr(event, self._weight)[0] # pass
+
+    def _count_const(self, pass_, event):
+        for r, p in zip(self._results, pass_):
+            r[IDX_TOTAL] += self._weight # total
+            if p: r[IDX_PASS] += self._weight # pass
 
     def increment_depth(self, by = 1):
         for r in self._results:
