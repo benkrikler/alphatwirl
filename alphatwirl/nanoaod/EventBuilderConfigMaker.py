@@ -1,11 +1,17 @@
 import os
 
+
 import ROOT
+import logging 
+
 
 from ..roottree import EventBuilderConfig as BaseEventBuilderConfig
 from .EventBuilderConfig import EventBuilderConfig as NanoAODEventBuilderConfig
 
-##__________________________________________________________________||
+
+logger = logging.getLogger(__name__)
+
+
 class EventBuilderConfigMaker(object):
     def __init__(self, treeName):
         self.treeName = treeName
@@ -31,8 +37,9 @@ class EventBuilderConfigMaker(object):
 
     def nevents_in_file(self, path):
         file = ROOT.TFile.Open(path)
+	if not file or file.IsZombie():
+		logger.error("Cannot open file, {}".format(path))
+		raise AttributeError
         tree = file.Get(self.treeName)
         return tree.GetEntries() # GetEntries() is slow. call only as
                                  # many times as necessary
-
-##__________________________________________________________________||

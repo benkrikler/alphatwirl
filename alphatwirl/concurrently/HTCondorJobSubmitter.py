@@ -103,8 +103,11 @@ class HTCondorJobSubmitter(object):
             logger.debug(l)
 
         regex = re.compile("(\d+) job\(s\) submitted to cluster (\d+)", re.MULTILINE)
-        njobs = int(regex.search(stdout).groups()[0])
-        clusterid = regex.search(stdout).groups()[1]
+        match = regex.search(stdout)
+        if not match:
+          return []
+        njobs = int(match.groups()[0])
+        clusterid = match.groups()[1]
         # e.g., '3158626'
 
         change_job_priority([clusterid], 10) ## need to make configurable
