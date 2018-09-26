@@ -2,12 +2,21 @@ import os
 import unittest
 
 import numpy as np
-import pandas as pd
 
 from alphatwirl.nanoaod import Component
 from alphatwirl.nanoaod import NanoAODResult
 
+
+hasPandas = False
+try:
+    import pandas as pd
+    hasPandas = True
+except ImportError:
+    pass
+
+
 ##__________________________________________________________________||
+@unittest.skipUnless(hasPandas, "has no pandas")
 class TestNanoAODResult(unittest.TestCase):
 
     def setUp(self):
