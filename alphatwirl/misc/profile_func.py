@@ -5,18 +5,19 @@ from io import StringIO, BytesIO
 
 ##__________________________________________________________________||
 def print_profile_func(func, profile_out_path=None):
-    result = profile_func(func)
+    profile, result = profile_func(func)
     if profile_out_path is None:
-        print(result)
+        print(profile)
     else:
         with open(profile_out_path, 'w') as f:
-            f.write(result)
+            f.write(profile)
+    return result
 
 ##__________________________________________________________________||
 def profile_func(func):
     pr = cProfile.Profile()
     pr.enable()
-    func()
+    result = func()
     pr.disable()
     sortby = 'cumulative'
     try:
@@ -25,6 +26,6 @@ def profile_func(func):
     except TypeError:
         s = BytesIO()
         pstats.Stats(pr, stream=s).strip_dirs().sort_stats(sortby).print_stats()
-    return s.getvalue()
+    return s.getvalue(), result
 
 ##__________________________________________________________________||
